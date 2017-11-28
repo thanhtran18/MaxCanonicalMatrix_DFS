@@ -1,5 +1,7 @@
-# This program determines if a matrix is in its canonical form. That is, the integer associated with the given matrix is
-# the largest possible integer over all its row and column permutations using DFS with pruning technique
+# This program determines if a matrix is in its maximum canonical form. That is, the integer associated with the given
+# matrix is the largest possible integer over all its row and column permutations using Depth-First Search with pruning
+# technique
+
 # Author: Cong Thanh Tran.
 
 
@@ -13,9 +15,9 @@ import copy
 # an instance of this class is a node of matrix, which contains necessary information to do DFS search
 class NodeOfMatrix:
     def __init__(self, currMatrix, rowIndices):
-        self.currMatrix = currMatrix
-        self.visited = False
-        self.rowIndices = rowIndices
+        self.currMatrix = currMatrix    # the matrix
+        self.visited = False            # true if the node has been visited
+        self.rowIndices = rowIndices    # numbers from the origin matrix of the rows included in this matrix
 
     def set_visited(self, newVisited):
         self.visited = newVisited
@@ -24,7 +26,47 @@ class NodeOfMatrix:
         self.rowIndices = newRowIndices
 
 
+# check if the given matrix is in its maximum canonical form using DFS with pruning technique
+def isCanonicalDFS(givenMatrix):
+    rootNode = NodeOfMatrix([], [])  # current, rowIndices
+    rowIndices = []
+    visitedSates = set()
+    states = []
 
+    # starts DFS
+    states.append(rootNode)  # states of Nodes, not just the matrix
+
+    result = True
+    count = 1
+    currNode = rootNode
+    while len(states) > 0:
+        temp = states.pop()  # temp is a node
+        if result:
+            if not temp.visited:
+                temp.set_visited(True)
+                currChildren = generateChildrenMatrices(givenMatrix, temp)
+
+                if len(currChildren) > 0:
+                    states.append(currChildren[0])
+                for child in currChildren:
+                    sortedChildByCols = sortColsInDescending(child.currMatrix)
+                    givenTop = givenMatrix[0:len(sortedChildByCols)]
+                    if np.array_equal(sortedChildByCols, givenTop):  # keep checking if we have the same matrices
+                        for ii in range(len(currChildren)):  # child is a NodeOfMatrix
+                            if ii == 0:
+                                continue
+                            if not currChildren[ii].visited:
+                                states.append(currChildren[ii])
+                        currNode = child
+                        break
+                    if isSecondLarger(givenTop, sortedChildByCols):  # we got a better one for max canonical form here
+                        return False
+                    else:  # if the new one is not as good as the given matrix, skip this branch of the tree => PRUNING
+                        continue
+    return True
+
+
+# check if the second matrix in the parameters is larger than the first one
 def isSecondLarger(matrix1, matrix2):
     exitFlag = False
     secondIsLarger = False
@@ -42,49 +84,9 @@ def isSecondLarger(matrix1, matrix2):
     return secondIsLarger
 
 
-def isCanonicalDFS(givenMatrix):
-    rootNode = NodeOfMatrix([], [])  # current, parent, rowIndices
-    rowIndices = []
-    visitedSates = set()
-    states = []
-    states.append(rootNode) # states of Nodes, not just the matrix
-    # visitedSates.add(rootNode.currMatrix)
-
-    result = True
-    count = 1
-    currNode = rootNode
-    while len(states) > 0:
-        temp = states.pop()  # temp is a node
-        if result:
-            if not temp.visited:
-                temp.set_visited(True)
-                currChildren = generateChildrenMatrices(givenMatrix, temp)
-                # for child in currChildren:  # child is a NodeOfMatrix
-                #    if not child.visited:
-                #        states.append(child)
-                if len(currChildren) > 0:
-                    states.append(currChildren[0])
-                for child in currChildren:
-                    sortedChildByCols = sortColsInDescending(child.currMatrix)
-                    givenTop = givenMatrix[0:len(sortedChildByCols)]
-                    if np.array_equal(sortedChildByCols, givenTop):
-                        for ii in range(len(currChildren)):  # child is a NodeOfMatrix
-                            if ii == 0:
-                                continue
-                            if not currChildren[ii].visited:
-                                states.append(currChildren[ii])
-                        currNode = child
-                        break
-                    if isSecondLarger(givenTop, sortedChildByCols):
-                        return False
-                    else:
-                        continue
-    return True
-
-
-
-# rowIndices are indices of the rows in the current
-# return a list of NodeOfMatrix
+# rowIndices are indices from the original matrix of the rows in the current matrix
+# generates all the children nodes of the current NodeOfMatrix dynamically while doing DFS, returns a list of
+#   NodeOfMatrix
 def generateChildrenMatrices(givenMatrix, currentNode):
     children = []
     indexList = copy.deepcopy(currentNode.rowIndices)
@@ -115,6 +117,7 @@ def sortRowsInDescending(givenMatrix):
     givenMatrix = givenMatrix[::-1]
     return givenMatrix
 
+
 # sort columns of the given matrix in descending order
 def sortColsInDescending(givenMatrix):
     # sort in ascending order
@@ -127,25 +130,8 @@ def sortColsInDescending(givenMatrix):
     return givenMatrix
 
 
-def generateRowPermutations(givenMatrix):
-    permutations = []
-    duplicate = False
-    numOfPermutations = 0
-    while numOfPermutations < math.factorial(len(givenMatrix)):
-        newMatrix = np.random.permutation(givenMatrix)
-        for curr in permutations:
-            if np.array_equal(curr, newMatrix):
-                duplicate = True
-            else:
-                duplicate = False
-
-        if not duplicate:
-            permutations.append(newMatrix)
-            numOfPermutations += 1
-    return permutations
-
-
 # distinct: number of distinct numbers (from 1 to distinct)
+# converts the input to a binary matrix, returns the binary matrix
 def convertInput(inputMatrix, distinct, numRows):
     convertedMatrix = [[0 for x in range(distinct)] for y in range(numRows)]
     for i in range(len(inputMatrix)):
@@ -154,14 +140,18 @@ def convertInput(inputMatrix, distinct, numRows):
     return np.matrix(convertedMatrix)
 
 
-# TESTING MATRICES
-# matrix = np.matrix([[1,1,1,0,0],[1,1,0,1,0],[0,0,1,1,1]])
+# ******UNIT TEST OF DIFFERENT TYPES OF MATRICES, USED FOR QUICK TESTING*******
+# matrix = np.matrix([[1,1,1,0,0],[1,1,0,1,0],[0,0,1,1,1]])  # should be true
 
-# matrix = np.array([[1,1,1,0,0],[1,0,0,1,0],[0,1,0,0,1]])
+# matrix = np.array([[1,1,1,0,0],[1,0,0,1,0],[0,1,0,0,1]])  # should be true
 # matrix = np.array([[1,1,1,0,0,1,1,0,1],[1,1,1,0,0,1,0,0,1],[1,1,0,1,0,0,1,1,0],[1,1,0,1,0,0,1,0,0],[1,0,1,1,0,0,1,1,0],[1,0,0,1,0,0,1,0,0]]) #false
 # matrix = np.array([[1,1,1,1,1,1,0,0,0],[1,1,1,1,1,0,0,0,0],[1,1,0,0,0,1,1,1,0],[1,1,0,0,0,1,1,0,0],[1,0,1,0,0,1,1,1,0],[1,0,0,0,0,1,1,0,0]]) #true
 # matrix = np.array([[1,1,1,1,1,1,0,0,0],[1,1,1,1,1,0,0,0,0],[1,1,0,0,0,1,1,1,0],[1,1,0,0,0,1,1,0,0],[1,0,1,0,0,1,1,1,0],[1,0,0,0,0,1,1,0,0],[1,0,0,0,0,1,0,1,1],[1,0,0,0,0,1,0,1,0],[1,0,0,0,0,0,0,0,0]])
 
+# 10 rows, same num of 1s, true
+# matrix = np.array([[1,1,1,1,1,0,0,0,0],[1,1,1,1,0,1,0,0,0],[1,1,1,1,0,0,1,0,0],[1,1,1,1,0,0,0,1,0],[1,1,1,0,1,1,0,0,0],[1,1,0,0,1,0,1,1,0],[1,0,1,0,1,0,1,0,1],[1,0,0,0,1,0,1,1,1],[0,1,0,0,1,0,1,1,1],[0,0,1,0,1,0,1,1,1]])
+# 9 rows, same num of 1s, true
+# matrix = np.array([[1,1,1,1,1,0,0,0,0],[1,1,1,1,0,1,0,0,0],[1,1,1,1,0,0,1,0,0],[1,1,1,1,0,0,0,1,0],[1,1,1,0,1,1,0,0,0],[1,1,0,0,1,0,1,1,0],[1,0,1,0,1,0,1,0,1],[1,0,0,0,1,0,1,1,1],[0,1,0,0,1,0,1,1,1]])
 # 9 rows, same num of 1s, false
 # matrix = np.array([[1,1,1,1,1,0,0,0,0],[1,1,1,1,0,1,0,0,0],[1,1,0,0,0,1,1,1,0],[1,1,0,0,0,1,1,0,1],[1,0,1,0,0,1,1,1,0],[1,0,0,0,1,1,1,1,0],[1,0,0,0,1,1,1,0,1],[1,0,0,0,0,1,1,1,1],[1,0,0,0,0,1,1,1,1]])
 # 9 rows, same num of 1s, false
@@ -180,6 +170,10 @@ def convertInput(inputMatrix, distinct, numRows):
 # MAIN PROGRAM STARTS HERE
 # matrix = np.array([[1,1,0,1,0,0,0],[0,1,1,0,1,0,0],[0,0,1,1,0,1,0],[0,0,0,1,1,0,1]])
 
+
+# *** MAIN PROGRAM ***
+
+# comment the below part (until "start = ..." line) out in order to do quick test with the unit test above
 print("Please enter your matrix, with spaces between the columns.")
 print("Use one row per line, and a blank row when you're done.")
 matrix = []
@@ -202,7 +196,6 @@ rows = int(initial[1])
 matrix = convertInput(matrix, cols, rows)
 
 start = timeit.default_timer()
-
 
 inputMatrix = np.array(matrix)
 
