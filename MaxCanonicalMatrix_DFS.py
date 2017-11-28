@@ -174,8 +174,12 @@ def convertInput(inputMatrix, distinct, numRows):
 # *** MAIN PROGRAM ***
 
 # comment the below part (until "start = ..." line) out in order to do quick test with the unit test above
+
 print("Please enter your matrix, with spaces between the columns.")
 print("Use one row per line, and a blank row when you're done.")
+# input format:
+# number_of_distinct_numbers number_of_rows
+# input matrix goes here
 matrix = []
 numLine = 0
 initial = []
