@@ -140,7 +140,7 @@ def convertInput(inputMatrix, distinct, numRows):
     return np.matrix(convertedMatrix)
 
 
-# ******UNIT TEST OF DIFFERENT TYPES OF MATRICES, USED FOR QUICK TESTING*******
+# ******THE FOLLOWING PART IS USED FOR QUICK TESTING*******
 # matrix = np.matrix([[1,1,1,0,0],[1,1,0,1,0],[0,0,1,1,1]])  # should be true
 
 # matrix = np.array([[1,1,1,0,0],[1,0,0,1,0],[0,1,0,0,1]])  # should be true
@@ -173,7 +173,7 @@ def convertInput(inputMatrix, distinct, numRows):
 
 # *** MAIN PROGRAM ***
 
-# comment the below part (until "start = ..." line) out in order to do quick test with the unit test above
+# comment the below part (until "start = ..." line) out in order to do quick test with the tests above
 
 print("Please enter your matrix, with spaces between the columns.")
 print("Use one row per line, and a blank row when you're done.")
